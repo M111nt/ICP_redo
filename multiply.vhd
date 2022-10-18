@@ -6,10 +6,9 @@ use ieee.numeric_std.all;
 
 entity multiply is
   Port (    
+            clk, reset  : in std_logic;
             --ctrl in
             multi_en    : in std_logic;
-            reset       : in std_logic;
-            clk         : in std_logic;
             --data in
             data_input : in std_logic_vector(15 downto 0);
             data_coeff : in std_logic_vector(15 downto 0); 
@@ -17,8 +16,8 @@ entity multiply is
             --ctrl out 
             multi_done  : out std_logic;
             --data out
-            data1_out : out std_logic_vector(15 downto 0);
-            data2_out : out std_logic_vector(15 downto 0)
+            data_out : out std_logic_vector(22 downto 0)
+
 
     );
 end multiply;
@@ -35,18 +34,20 @@ component ff is
 end component;
 
 
-type state_type is (s_initial, s_multi, s_send);
+type state_type is (s_initial, s_multi, s_add, s_send);
 signal state_reg, state_nxt : state_type;
 
 signal input_1, input_2 : std_logic_vector(7 downto 0);
 signal input_1_nxt, input_2_nxt : std_logic_vector(7 downto 0);
 
-signal coeff_1, coeff_2 : std_logic_vector(7 downto 0);
-signal coeff_1_nxt, coeff_2_nxt : std_logic_vector(7 downto 0);
+signal coeff_1, coeff_2 : std_logic_vector(6 downto 0);
+signal coeff_1_nxt, coeff_2_nxt : std_logic_vector(6 downto 0);
 
-signal result_1, result_2   : std_logic_vector(15 downto 0);
-signal result1_out, result2_out : std_logic_vector(15 downto 0);
+signal result_1, result_2   : std_logic_vector(14 downto 0);
 
+--the matrix is [14*8]*[8*14], when counting 111 in binary means one number is done.
+signal counter_8, counter_8_nxt     : std_logic_vector(2 downto 0) := (others => '0');
+signal data, data_nxt   : std_logic_vector(22 downto 0);
 
 
 begin
@@ -63,15 +64,15 @@ begin
 end process;
 
 --state machine--------------------------------------------
-process(state_reg, multi_en)
+process(state_reg, multi_en, counter_8)
 begin
     multi_done <= '0';
-    input_1 <= (others => '0');
-    input_2 <= (others => '0');
-    coeff_1 <= (others => '0');
-    coeff_2 <= (others => '0');
-    result1_out <= (others => '0');
-    result2_out <= (others => '0');   
+    input_1_nxt <= (others => '0');
+    input_2_nxt <= (others => '0');
+    coeff_1_nxt <= (others => '0');
+    coeff_2_nxt <= (others => '0'); 
+    data_nxt <= (others => '0');
+    counter_8_nxt <= (others => '0'); 
     
     case state_reg is 
         when s_initial => 
@@ -83,16 +84,33 @@ begin
         
         
         when s_multi =>
-            input_1 <= data_input(7 downto 0);
-            input_2 <= data_input(15 downto 8);
-            coeff_1 <= data_coeff(6 downto 0);
-            coeff_2 <= data_coeff(13 downto 7);
-            state_nxt <= s_send;
+            input_1_nxt <= data_input(7 downto 0);--the input has 8 bits
+            input_2_nxt <= data_input(15 downto 8);
+            coeff_1_nxt <= data_coeff(6 downto 0);--the coeff only has 7 bits
+            coeff_2_nxt <= data_coeff(14 downto 8);
+            
+            data_nxt <= data;
+            counter_8_nxt <= counter_8 + 1;
+            state_nxt <= s_add;
+            
+        when s_add => 
+            input_1_nxt <= input_1;
+            input_2_nxt <= input_2;
+            coeff_1_nxt <= coeff_1;
+            coeff_2_nxt <= coeff_2;
+            data_nxt <= result_1 + result_2;
+            if counter_8 = "111" then 
+                counter_8_nxt <= (others => '0');
+                state_nxt <= s_send;
+            else 
+                counter_8_nxt <= counter_8;
+                state_nxt <= s_multi; 
+            end if;
+            
                
         when s_send => 
-            result1_out <= result_1;
-            result2_out <= result_2;
-            multi_done <= '1';
+            multi_done <= '1';--feedback to controller & average 
+            data_out <= data;
             
             state_nxt <= s_initial;
         
@@ -106,12 +124,10 @@ end process;
 result_1 <= input_1 * coeff_1; 
 result_2 <= input_2 * coeff_2;
 
-data1_out <= result1_out;
-data2_out <= result2_out;
 
 
 input_01: FF 
-  generic map(N => 7)
+  generic map(N => 8)
   port map(   D     =>input_1_nxt,
               Q     =>input_1,
             clk     =>clk,
@@ -119,7 +135,7 @@ input_01: FF
       );
       
 input_02: FF 
-  generic map(N => 7)
+  generic map(N => 8)
   port map(   D     =>input_1_nxt,
               Q     =>input_1,
             clk     =>clk,
@@ -142,6 +158,21 @@ coeff_02: FF
             reset   =>reset
       );
 
+counter: FF 
+  generic map(N => 3)
+  port map(   D     =>counter_8_nxt,
+              Q     =>counter_8,
+            clk     =>clk,
+            reset   =>reset
+      );
+
+add: FF 
+  generic map(N => 23)
+  port map(   D     =>data_nxt,
+              Q     =>data,
+            clk     =>clk,
+            reset   =>reset
+      );
 
 
 end Behavioral;

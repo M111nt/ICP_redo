@@ -46,7 +46,7 @@ signal coeff_1_nxt, coeff_2_nxt : std_logic_vector(6 downto 0);
 signal result_1, result_2   : std_logic_vector(14 downto 0);
 
 --the matrix is [14*8]*[8*14], when counting 111 in binary means one number is done.
-signal counter_8, counter_8_nxt     : std_logic_vector(2 downto 0) := (others => '0');
+signal counter_8, counter_8_nxt     : std_logic_vector(1 downto 0) := (others => '0');
 signal data, data_nxt   : std_logic_vector(22 downto 0);
 
 
@@ -64,7 +64,7 @@ begin
 end process;
 
 --state machine--------------------------------------------
-process(state_reg, multi_en, counter_8)
+process(state_reg, multi_en, counter_8, data, result_1, result_2)
 begin
     multi_done <= '0';
     input_1_nxt <= (others => '0');
@@ -73,6 +73,10 @@ begin
     coeff_2_nxt <= (others => '0'); 
     data_nxt <= (others => '0');
     counter_8_nxt <= (others => '0'); 
+    data_out <= (others => '0');
+
+    
+    
     
     case state_reg is 
         when s_initial => 
@@ -90,7 +94,7 @@ begin
             coeff_2_nxt <= data_coeff(14 downto 8);
             
             data_nxt <= data;
-            counter_8_nxt <= counter_8 + 1;
+            counter_8_nxt <= counter_8;
             state_nxt <= s_add;
             
         when s_add => 
@@ -98,12 +102,12 @@ begin
             input_2_nxt <= input_2;
             coeff_1_nxt <= coeff_1;
             coeff_2_nxt <= coeff_2;
-            data_nxt <= result_1 + result_2;
-            if counter_8 = "111" then 
+            data_nxt <= result_1 + result_2 + data;
+            if counter_8 = "11" then 
                 counter_8_nxt <= (others => '0');
                 state_nxt <= s_send;
             else 
-                counter_8_nxt <= counter_8;
+                counter_8_nxt <= counter_8 + 1;
                 state_nxt <= s_multi; 
             end if;
             
@@ -121,6 +125,7 @@ begin
 end process;
 
 
+
 result_1 <= input_1 * coeff_1; 
 result_2 <= input_2 * coeff_2;
 
@@ -136,8 +141,8 @@ input_01: FF
       
 input_02: FF 
   generic map(N => 8)
-  port map(   D     =>input_1_nxt,
-              Q     =>input_1,
+  port map(   D     =>input_2_nxt,
+              Q     =>input_2,
             clk     =>clk,
             reset   =>reset
       );
@@ -159,7 +164,7 @@ coeff_02: FF
       );
 
 counter: FF 
-  generic map(N => 3)
+  generic map(N => 2)
   port map(   D     =>counter_8_nxt,
               Q     =>counter_8,
             clk     =>clk,

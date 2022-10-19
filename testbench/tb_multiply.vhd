@@ -1,7 +1,8 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
+use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 
 
 entity tb_multiply is
@@ -56,7 +57,9 @@ reset <= '1' ,
          
 multi_en <= '0', 
          '1' after 8*period1, 
-         '0' after 10*period1;        
+         '0' after 10*period1, 
+         '1' after 80*period1, 
+         '0' after 82*period1;        
 
 data_input <=   "0000000000000000" after 0*period1,
                 "0000000100000001" after 10*period1,

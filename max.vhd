@@ -12,10 +12,10 @@ entity max is
             --control signal from multiply 
             max_en  : in std_logic;
             --data from multiply 
-            data_out : in std_logic_vector(22 downto 0);
+            data_out : in std_logic_vector(17 downto 0);
             
             --find the maximum data
-            max_out : out std_logic_vector(22 downto 0) 
+            max_out : out std_logic_vector(17 downto 0) 
   
   );
 end max;
@@ -31,11 +31,8 @@ component ff is
       );
 end component;
 
-type state_type is (s_initial, s_send);
-signal state_reg, state_nxt : state_type;
-
 signal count, count_nxt : std_logic_vector(6 downto 0); 
-signal data_max, data_max_nxt   : std_logic_vector(22 downto 0) := (others => '0');
+signal data_max, data_max_nxt   : std_logic_vector(17 downto 0) := (others => '0');
 
 begin
 
@@ -52,7 +49,7 @@ end process;
 data_max_nxt <= data_out when data_max < data_out else data_max; 
 
 compare_data: FF 
-  generic map(N => 23)
+  generic map(N => 18)
   port map(   D     =>data_max_nxt,
               Q     =>data_max,
             clk     =>clk,

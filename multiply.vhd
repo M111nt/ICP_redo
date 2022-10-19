@@ -16,7 +16,7 @@ entity multiply is
             --ctrl out 
             multi_done  : out std_logic;
             --data out
-            data_out : out std_logic_vector(22 downto 0)
+            data_out : out std_logic_vector(17 downto 0)
 
 
     );
@@ -43,11 +43,12 @@ signal input_1_nxt, input_2_nxt : std_logic_vector(7 downto 0);
 signal coeff_1, coeff_2 : std_logic_vector(6 downto 0);
 signal coeff_1_nxt, coeff_2_nxt : std_logic_vector(6 downto 0);
 
-signal result_1, result_2   : std_logic_vector(14 downto 0);
+signal result_1, result_2   : std_logic_vector(17 downto 0);
+
 
 --the matrix is [14*8]*[8*14], when counting 111 in binary means one number is done.
 signal counter_8, counter_8_nxt     : std_logic_vector(1 downto 0) := (others => '0');
-signal data, data_nxt   : std_logic_vector(22 downto 0);
+signal data, data_nxt   : std_logic_vector(17 downto 0);
 
 
 begin
@@ -101,7 +102,7 @@ begin
             input_1_nxt <= input_1;
             input_2_nxt <= input_2;
             coeff_1_nxt <= coeff_1;
-            coeff_2_nxt <= coeff_2;
+            coeff_2_nxt <= coeff_2;           
             data_nxt <= result_1 + result_2 + data;
             if counter_8 = "11" then 
                 counter_8_nxt <= (others => '0');
@@ -125,10 +126,8 @@ begin
 end process;
 
 
-
-result_1 <= input_1 * coeff_1; 
-result_2 <= input_2 * coeff_2;
-
+result_1 <= input_1 * coeff_1 + "000000000000000000"; --to make they have the same digits
+result_2 <= input_2 * coeff_2 + "000000000000000000";
 
 
 input_01: FF 
@@ -172,7 +171,7 @@ counter: FF
       );
 
 add: FF 
-  generic map(N => 23)
+  generic map(N => 18)
   port map(   D     =>data_nxt,
               Q     =>data,
             clk     =>clk,

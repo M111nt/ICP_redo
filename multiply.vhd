@@ -7,7 +7,7 @@ use ieee.numeric_std.all;
 entity multiply is
   Port (    
             clk, reset  : in std_logic;
-            --ctrl in
+            --signal from load_coeff 
             multi_en    : in std_logic;
             --data in
             data_input : in std_logic_vector(15 downto 0);

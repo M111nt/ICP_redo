@@ -7,16 +7,20 @@ use ieee.numeric_std.all;
 entity multiply is
   Port (    
             clk, reset  : in std_logic;
+            -----------------------------------------------------
             --signal from load_coeff 
             multi_en    : in std_logic;
             --data in
-            data_input : in std_logic_vector(15 downto 0);
-            data_coeff : in std_logic_vector(15 downto 0); 
+            data_input  : in std_logic_vector(15 downto 0);
+            data_coeff  : in std_logic_vector(15 downto 0); 
             
+            -----------------------------------------------------
             --ctrl out 
             multi_done  : out std_logic;
             --data out
-            data_out : out std_logic_vector(17 downto 0)
+            data_out    : out std_logic_vector(17 downto 0)
+            
+            -----------------------------------------------------
 
 
     );
@@ -27,7 +31,7 @@ architecture Behavioral of multiply is
 component ff is
   generic(N:integer:=1);
   port(   D  :  in std_logic_vector(N-1 downto 0);
-          Q  : out std_logic_vector(N-1 downto 0);
+          Q  :  out std_logic_vector(N-1 downto 0);
         clk  :  in std_logic;
         reset:  in std_logic
       );
@@ -124,11 +128,13 @@ begin
 
 end process;
 
+--Computing part with two multipliers-----------------------
 
 result_1 <= input_1 * coeff_1 + "000000000000000000"; --to make they have the same digits
 result_2 <= input_2 * coeff_2 + "000000000000000000";
 
 
+--Flip Flop-------------------------------------------------
 input_01: FF 
   generic map(N => 8)
   port map(   D     =>input_1_nxt,

@@ -10,8 +10,7 @@ entity load_coeff is
   Port ( 
             clk, reset  : in std_logic;
             
-            --load coeff part 
-            
+            --load coeff part -----------------------------------
             --signal from controller 
             ld2mem      : in std_logic;
             --read data
@@ -23,14 +22,17 @@ entity load_coeff is
             --coeff to memory   
             coeff2mem   : out std_logic_vector(15 downto 0);
             
+            -----------------------------------------------------
             
-            --op part 
+            --op part ------------------------------------------- 
             --signal from controller 
             op_en       : in std_logic;
             --control signal to multiply
             multi_en    : out std_logic;
             --coeff to multiply
             data_coeff  : out std_logic_vector(15 downto 0)
+            
+            -----------------------------------------------------
 
   
   );
@@ -53,7 +55,7 @@ end component;
 component ff is
   generic(N:integer:=1);
   port(   D  :  in std_logic_vector(N-1 downto 0);
-          Q  : out std_logic_vector(N-1 downto 0);
+          Q  :  out std_logic_vector(N-1 downto 0);
         clk  :  in std_logic;
         reset:  in std_logic
       );
@@ -174,7 +176,7 @@ begin
 
 end process;
 
-
+--Flip Flop-------------------------------------------------
 coefficient: FF 
   generic map(N => 16)
   port map(   D     =>reg_nxt,

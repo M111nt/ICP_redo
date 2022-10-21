@@ -16,6 +16,8 @@ entity load_coeff is
             ld2mem      : in std_logic;
             --read data
             coeff       : in std_logic_vector(15 downto 0);     
+            --control signal 
+            start_ld    : out std_logic;
             --feedback to controller 
             ld2mem_done : out std_logic;
             --coeff to memory   
@@ -60,18 +62,18 @@ end component;
 
 
 --SRAM---------------------------------------------
-signal r_or_w       : std_logic; -- Active Low (reand & write)
 signal choose       : std_logic;
+signal r_or_w       : std_logic; -- Active Low (reand & write) --write '0' --read '1'
 signal address      : std_logic_vector(7 downto 0);
 signal RY_ram       : std_logic;
 ---------------------------------------------------
 
 
-type state_type is (s_initial, s_ld_coeff, s_op);
+type state_type is (s_initial, s_ld_coeff, s_op, s_send2multi);
 signal state_reg, state_nxt : state_type;
 
 signal reg, reg_nxt : std_logic_vector(15 downto 0);
-signal counter_1, counter_1_nxt : std_logic_vector(5 downto 0);
+signal counter_1, counter_1_nxt : std_logic_vector(5 downto 0) := (others => '0');
 signal counter_2, counter_2_nxt : std_logic_vector(5 downto 0);
 
 
@@ -80,8 +82,8 @@ begin
 Ram_coeff: SRAM_SP_WRAPPER
 port map(
     ClkxCI             => clk             ,
-    CSxSI              => r_or_w          , -- Active Low --only write in this module
-    WExSI              => choose          , -- Active Low
+    CSxSI              => choose          , -- Active Low 
+    WExSI              => r_or_w          , -- Active Low --only write in this module
     AddrxDI            => address         ,
     RYxSO              => RY_ram          ,
     DataxDI            => coeff           ,
@@ -101,12 +103,27 @@ end process;
 
 --state machine--------------------------------------------
 
-process(state_reg, ld2mem, op_en)
+process(state_reg, ld2mem, op_en, counter_1)
 begin
     
+    --SRAM------------------------------
+    choose <= '0';
+    r_or_w <= '1';--read
+    address <= (others => '0');
+    ------------------------------------
+
+    start_ld <= '0';
+    ld2mem_done <= '0';
+
+    counter_1_nxt <= (others => '0');
+    multi_en <= '0';
+    
+    
     case state_reg is 
+        
         when s_initial => 
-            if ld2mem = '1' and op_en = '0' then 
+            if ld2mem = '1' and op_en = '0' then                 
+                start_ld <= '1';
                 state_nxt <= s_ld_coeff;
             elsif ld2mem = '0' and op_en = '1' then 
                 state_nxt <= s_op;
@@ -115,10 +132,43 @@ begin
             end if;
         
         when s_ld_coeff => 
-            
+            choose <= '1'; 
+            r_or_w <= '0'; --write
+            address <= "00" & counter_1;
+            if counter_1 = "111000" then 
+                ld2mem_done <= '1';
+                counter_1_nxt <= (others => '0');
+                state_nxt <= s_initial;
+            else
+                counter_1_nxt <= counter_1 + 1;
+                state_nxt <= s_ld_coeff;
+            end if;           
         
         when s_op =>
-        
+            choose <= '1';
+            r_or_w <= '1'; --read 
+            address <= "00" & counter_1;
+            counter_1_nxt <= counter_1;
+            if counter_1 = "111000" then --counter = 56 (address = 0 -55)
+                state_nxt <= s_initial; 
+            elsif counter_1 = "000000" then 
+                multi_en <= '1';
+                state_nxt <= s_send2multi;
+            else
+                state_nxt <= s_send2multi;
+            end if;
+            
+         when s_send2multi => 
+            choose <= '1';
+            r_or_w <= '1'; --read
+            address <= "00" & counter_1;
+
+            counter_1_nxt <= counter_1 + 1;
+
+            state_nxt <= s_op;
+         
+         
+         
     
     end case;
 

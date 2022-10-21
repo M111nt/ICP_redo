@@ -77,9 +77,8 @@ begin
     data_out <= (others => '0');
 
     
-    
-    
     case state_reg is 
+    
         when s_initial => 
             if multi_en = '1' then 
                 state_nxt <= s_multi;

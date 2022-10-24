@@ -57,26 +57,26 @@ reset <= '1' ,
          
 multi_en <= '0', 
          '1' after 8*period1, 
-         '0' after 10*period1, 
-         '1' after 80*period1, 
-         '0' after 82*period1,
-         '1' after 150*period1, 
-         '0' after 152*period1;        
+         '0' after 10*period1; 
+--         '1' after 80*period1, 
+--         '0' after 82*period1,
+--         '1' after 150*period1, 
+--         '0' after 152*period1;        
 
 data_input <=   "0000000000000000" after 0*period1,
                 "0000000100000001" after 10*period1,
                 "0000001000000010" after 14*period1,
                 "0000001100000011" after 18*period1,
                 "0000010000000100" after 22*period1,
-                "0000010100000101" after 26*period1,
-                "1111111111111111" after 152*period1;
+--                "0000010100000101" after 26*period1,
+                "1111111111111111" after 26*period1;
 
 data_coeff <=   "0000000000000000" after 0*period1,
                 "0000000100000001" after 10*period1,
                 "0000001000000010" after 14*period1,
                 "0000001100000011" after 18*period1,
                 "0000010000000100" after 22*period1,
-                "0000010100000101" after 26*period1,
-                "0111111101111111" after 152*period1;
+--                "0000010100000101" after 26*period1,
+                "0111111101111111" after 26*period1;
 
 end Behavioral;

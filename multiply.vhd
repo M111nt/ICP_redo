@@ -17,6 +17,7 @@ entity multiply is
             -----------------------------------------------------
             --ctrl out 
             multi_done  : out std_logic;
+            store_en    : out std_logic;
             --data out
             data_out    : out std_logic_vector(17 downto 0)
             
@@ -42,17 +43,19 @@ type state_type is (s_initial, s_multi, s_add, s_send);
 signal state_reg, state_nxt : state_type;
 
 signal input_1, input_2 : std_logic_vector(7 downto 0);
-signal input_1_nxt, input_2_nxt : std_logic_vector(7 downto 0);
 
 signal coeff_1, coeff_2 : std_logic_vector(6 downto 0);
-signal coeff_1_nxt, coeff_2_nxt : std_logic_vector(6 downto 0);
 
 signal result_1, result_2   : std_logic_vector(17 downto 0);
 
 
 --the matrix is [14*8]*[8*14], when counting 111 in binary means one number is done.
 signal counter_8, counter_8_nxt     : std_logic_vector(1 downto 0) := (others => '0');
+signal counter_14, counter_14_nxt   : std_logic_vector(3 downto 0) := (others => '0');
+--------------------------------------------------------------------------------------
 signal data, data_nxt   : std_logic_vector(17 downto 0);
+
+signal store, store_nxt : std_logic_vector(0 downto 0);
 
 
 begin
@@ -69,16 +72,19 @@ begin
 end process;
 
 --state machine--------------------------------------------
-process(state_reg, multi_en, counter_8, data, result_1, result_2)
+process(state_reg, multi_en, counter_8, data, result_1, result_2, counter_14)
 begin
     multi_done <= '0';
-    input_1_nxt <= (others => '0');
-    input_2_nxt <= (others => '0');
-    coeff_1_nxt <= (others => '0');
-    coeff_2_nxt <= (others => '0'); 
     data_nxt <= (others => '0');
     counter_8_nxt <= (others => '0'); 
-    data_out <= (others => '0');
+    counter_14_nxt <= (others => '0'); 
+
+    store_nxt <= "0";
+     input_1 <= (others => '0');
+     input_2 <= (others => '0');
+     coeff_1 <= (others => '0');
+     coeff_2 <= (others => '0');
+
 
     
     case state_reg is 
@@ -92,25 +98,46 @@ begin
         
         
         when s_multi =>
-            input_1_nxt <= data_input(7 downto 0);--the input has 8 bits
-            input_2_nxt <= data_input(15 downto 8);
-            coeff_1_nxt <= data_coeff(6 downto 0);--the coeff only has 7 bits
-            coeff_2_nxt <= data_coeff(14 downto 8);
+            input_1 <= data_input(7 downto 0);--the input has 8 bits
+            input_2 <= data_input(15 downto 8);
+            coeff_1 <= data_coeff(6 downto 0);--the coeff only has 7 bits
+            coeff_2 <= data_coeff(14 downto 8);
             
-            data_nxt <= data;
+            
+            
+            if counter_8 = "00" then 
+                data_nxt <= (others => '0');
+            else 
+                data_nxt <= data;
+            end if;
             counter_8_nxt <= counter_8;
+            counter_14_nxt <= counter_14;
             state_nxt <= s_add;
+     
             
         when s_add => 
-            input_1_nxt <= input_1;
-            input_2_nxt <= input_2;
-            coeff_1_nxt <= coeff_1;
-            coeff_2_nxt <= coeff_2;           
             data_nxt <= result_1 + result_2 + data;
+            input_1 <= data_input(7 downto 0);--the input has 8 bits
+            input_2 <= data_input(15 downto 8);
+            coeff_1 <= data_coeff(6 downto 0);--the coeff only has 7 bits
+            coeff_2 <= data_coeff(14 downto 8);
+
+
+            
             if counter_8 = "11" then 
                 counter_8_nxt <= (others => '0');
-                state_nxt <= s_send;
+                store_nxt <= "1";--signal to store 
+                if counter_14 = "1101" then 
+                    counter_14_nxt <= (others => '0');
+                    state_nxt <= s_send; 
+                else 
+                    counter_14_nxt <= counter_14 + 1;
+                    state_nxt <= s_multi;
+                end if;
+                
             else 
+                store_nxt <= "0";--signal to store
+                counter_14_nxt <= counter_14; 
                 counter_8_nxt <= counter_8 + 1;
                 state_nxt <= s_multi; 
             end if;
@@ -118,7 +145,6 @@ begin
                
         when s_send => 
             multi_done <= '1';--feedback to controller & average 
-            data_out <= data;
             
             state_nxt <= s_initial;
         
@@ -133,44 +159,31 @@ end process;
 result_1 <= input_1 * coeff_1 + "000000000000000000"; --to make they have the same digits
 result_2 <= input_2 * coeff_2 + "000000000000000000";
 
+--Send data-------------------------------------------------
+store_en <= store(0);
+data_out <= data when store = "1" else (others => '0');
+
+
+
+--Store-----------------------------------------------------
+
+
+
+
 
 --Flip Flop-------------------------------------------------
-input_01: FF 
-  generic map(N => 8)
-  port map(   D     =>input_1_nxt,
-              Q     =>input_1,
+counter1: FF 
+  generic map(N => 2)
+  port map(   D     =>counter_8_nxt,
+              Q     =>counter_8,
             clk     =>clk,
             reset   =>reset
       );
       
-input_02: FF 
-  generic map(N => 8)
-  port map(   D     =>input_2_nxt,
-              Q     =>input_2,
-            clk     =>clk,
-            reset   =>reset
-      );
-
-coeff_01: FF 
-  generic map(N => 7)
-  port map(   D     =>coeff_1_nxt,
-              Q     =>coeff_1,
-            clk     =>clk,
-            reset   =>reset
-      );
-
-coeff_02: FF 
-  generic map(N => 7)
-  port map(   D     =>coeff_2_nxt,
-              Q     =>coeff_2,
-            clk     =>clk,
-            reset   =>reset
-      );
-
-counter: FF 
-  generic map(N => 2)
-  port map(   D     =>counter_8_nxt,
-              Q     =>counter_8,
+counter2: FF 
+  generic map(N => 4)
+  port map(   D     =>counter_14_nxt,
+              Q     =>counter_14,
             clk     =>clk,
             reset   =>reset
       );
@@ -183,5 +196,12 @@ add: FF
             reset   =>reset
       );
 
+send_data: FF 
+  generic map(N => 1)
+  port map(   D     =>store_nxt,
+              Q     =>store,
+            clk     =>clk,
+            reset   =>reset
+      );
 
 end Behavioral;

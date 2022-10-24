@@ -17,8 +17,8 @@ entity load_input is
             --signal from controller 
             op_en       : in std_logic;
             
-            
-            data_input : out std_logic_vector(15 downto 0)
+            start_load  : out std_logic;
+            data_input  : out std_logic_vector(15 downto 0)
             
             -----------------------------------------------------
   
@@ -56,7 +56,7 @@ signal counter1, counter1_nxt : std_logic_vector(1 downto 0) := (others => '0');
 --control send
 signal counter2, counter2_nxt : std_logic_vector(1 downto 0) := (others => '0');
 --control the loop will be executed 14 times
-signal counter3, counter3_nxt : std_logic_vector(3 downto 0);
+signal counter3, counter3_nxt : std_logic_vector(3 downto 0) := (others => '0');
 
 
 begin
@@ -73,8 +73,9 @@ begin
 end process;
 
 --state machine --------------------------------------------
-process(ld_input, op_en, counter1)
+process(ld_input, op_en, counter1, counter2, counter3)
 begin 
+    start_load <= '0';
     counter1_nxt <= (others => '0');
     flag1 <= '0';
     flag2 <= '0';
@@ -83,6 +84,7 @@ begin
     
         when s_initial => 
             if ld_input = '1' and op_en = '0' then 
+                flag1 <= '1'; 
                 state_nxt <= s_ld_input;
             elsif ld_input = '0' and op_en = '1' then 
                 state_nxt <= s_send2multi;
@@ -91,7 +93,7 @@ begin
             end if;
         
         when s_ld_input => 
-            flag1 <= '1'; 
+            start_load <= '1';
             if counter1 = "11" then 
                 counter1_nxt <= (others => '0');
                 state_nxt <= s_initial;
@@ -99,20 +101,26 @@ begin
                 counter1_nxt <= counter1 + 1;
                 state_nxt <= s_ld_input;
             end if;
-        
-        
-        
+                
         when s_send2multi =>
             flag2 <= '1';
+            if counter3 = "1110" then --14
+                counter3_nxt <= (others => '0');
+                state_nxt <= s_initial;
+            else
+                counter3_nxt <= counter3 + 1;
+                state_nxt <= s_send2multi;
+                
+                if counter2 = "11" then 
+                    counter2_nxt <= (others => '0');
+                else
+                    counter2_nxt <= counter2 + 1;
+                end if;
+            
+            end if;
         
-        
-    
     
     end case;
-
-
-
-
 
 
 end process;

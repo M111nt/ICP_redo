@@ -78,18 +78,24 @@ signal reg, reg_nxt : std_logic_vector(15 downto 0);
 signal counter_1, counter_1_nxt : std_logic_vector(5 downto 0) := (others => '0');
 signal counter_2, counter_2_nxt : std_logic_vector(5 downto 0);
 
+signal coeff_32 : std_logic_vector(31 downto 0);
+signal data_coeff_32 : std_logic_vector(31 downto 0);
 
 begin
+--SRAM bits transfer----------------------
+coeff_32 <= "0000000000000000" & coeff;
+data_coeff <= data_coeff_32(15 downto 0);
+------------------------------------------
 
 Ram_coeff: SRAM_SP_WRAPPER
 port map(
     ClkxCI             => clk             ,
     CSxSI              => choose          , -- Active Low 
-    WExSI              => r_or_w          , -- Active Low --only write in this module
+    WExSI              => r_or_w          , -- Active Low 
     AddrxDI            => address         ,
     RYxSO              => RY_ram          ,
-    DataxDI            => coeff           ,
-    DataxDO            => data_coeff 
+    DataxDI            => coeff_32        ,
+    DataxDO            => data_coeff_32
     );
 
 --state contrl--------------------------------
@@ -109,7 +115,7 @@ process(state_reg, ld2mem, op_en, counter_1)
 begin
     
     --SRAM------------------------------
-    choose <= '0';
+    choose <= '1';
     r_or_w <= '1';--read
     address <= (others => '0');
     ------------------------------------
@@ -134,7 +140,7 @@ begin
             end if;
         
         when s_ld_coeff => 
-            choose <= '1'; 
+            choose <= '0'; 
             r_or_w <= '0'; --write
             address <= "00" & counter_1;
             if counter_1 = "111000" then 
@@ -147,7 +153,7 @@ begin
             end if;           
         
         when s_op =>
-            choose <= '1';
+            choose <= '0';
             r_or_w <= '1'; --read 
             address <= "00" & counter_1;
             counter_1_nxt <= counter_1;

@@ -69,18 +69,27 @@ port map(
     DataxDO            => sram_out 
     );
 
-process(store_en)
+
+process(reset, store_en)
 begin 
 
-if store_en = '1' then 
-    choose <= '0';
-    r_or_w <= '0'; --write
-    address_nxt <= address + 1;
-else 
+if reset = '1' then 
     choose <= '1';
     r_or_w <= '1'; --read
-    address_nxt <= address;
+    address_nxt <= (others => '0');
+else 
+    if store_en = '1' then 
+        choose <= '0';
+        r_or_w <= '0'; --write
+        address_nxt <= address + 1;
+    else 
+        choose <= '1';
+        r_or_w <= '1'; --read
+        address_nxt <= address;
+    end if;
+
 end if;
+
 
 end process;
 

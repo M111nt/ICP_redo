@@ -12,6 +12,7 @@ entity load_input is
             -----------------------------------------------------
             ld_input    : in std_logic;
             input       : in std_logic_vector(15 downto 0);
+            ld_input_done   : out std_logic;--feedback to controller
             
             --op part ------------------------------------------- 
             --signal from controller 
@@ -76,6 +77,7 @@ end process;
 process(ld_input, op_en, counter1, counter2, counter3)
 begin 
     start_load <= '0';
+    ld_input_done <= '0';
     counter1_nxt <= (others => '0');
     flag1 <= '0';
     flag2 <= '0';
@@ -84,7 +86,7 @@ begin
     
         when s_initial => 
             if ld_input = '1' and op_en = '0' then 
-                flag1 <= '1'; 
+                start_load <= '1';
                 state_nxt <= s_ld_input;
             elsif ld_input = '0' and op_en = '1' then 
                 state_nxt <= s_send2multi;
@@ -93,11 +95,13 @@ begin
             end if;
         
         when s_ld_input => 
-            start_load <= '1';
+            flag1 <= '1'; 
             if counter1 = "11" then 
+                ld_input_done <= '1';
                 counter1_nxt <= (others => '0');
                 state_nxt <= s_initial;
             else
+                ld_input_done <= '0';
                 counter1_nxt <= counter1 + 1;
                 state_nxt <= s_ld_input;
             end if;

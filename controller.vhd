@@ -36,7 +36,7 @@ type state_type is (s_initial, s_ld_coeff, s_ld_input, s_op);
 signal state_reg, state_nxt : state_type;
 
 signal flag1, flag1_nxt : std_logic_vector(0 downto 0) := (others => '0');
-signal counter14, counter14_nxt : std_logic_vector(3 downto 0);
+signal counter14, counter14_nxt : std_logic_vector(3 downto 0) := (others => '0');
 
 
 begin
@@ -60,16 +60,22 @@ begin
     ld_input <= '0';
     op_en <= '0';
     flag1_nxt <= "0";
+    counter14_nxt <= counter14;
 
     case state_reg is 
     
-        when s_initial => 
+        when s_initial =>
+        counter14_nxt <= (others => '0'); 
             if start = '1' and flag1(0) = '0' then 
                state_nxt <= s_ld_coeff;
+            elsif start = '0' and flag1(0) = '0' then
+                state_nxt <= s_initial;           
             elsif start = '1' and flag1(0) = '1' then 
-                state_nxt <= s_ld_input;
+               flag1_nxt <= "1";
+               state_nxt <= s_ld_input;
             else
-                state_nxt <= s_initial;
+               flag1_nxt <= "1";
+               state_nxt <= s_initial;
             end if;
             
         
@@ -86,7 +92,7 @@ begin
         when s_ld_input => 
             flag1_nxt <= "1";
             
-            if counter14 <= "1110" then
+            if counter14 = "1110" then
                 ld_input <= '0';
                 state_nxt <= s_initial;
             else 
@@ -119,7 +125,7 @@ begin
 end process;
 
 flag_01: FF 
-  generic map(N => 4)
+  generic map(N => 1)
   port map(   D     =>flag1_nxt,
               Q     =>flag1,
             clk     =>clk,

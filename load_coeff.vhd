@@ -163,6 +163,7 @@ begin
                 multi_en <= '1';
                 state_nxt <= s_send2multi;
             else
+                multi_en <= '1';
                 state_nxt <= s_send2multi;
             end if;
             

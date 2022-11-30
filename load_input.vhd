@@ -86,7 +86,7 @@ begin
     
         when s_initial => 
             if ld_input = '1' and op_en = '0' then 
-                start_load <= '1';
+                start_load <= '1';--give signal to outside
                 state_nxt <= s_ld_input;
             elsif ld_input = '0' and op_en = '1' then 
                 state_nxt <= s_send2multi;
@@ -131,10 +131,34 @@ end process;
 
 
 --Store the data -------------------------------------------
-reg_1_nxt <= input when counter1 = "00" and flag1 = '1' else reg_1;
-reg_2_nxt <= input when counter1 = "01" and flag1 = '1' else reg_2;
-reg_3_nxt <= input when counter1 = "10" and flag1 = '1' else reg_3;
-reg_4_nxt <= input when counter1 = "11" and flag1 = '1' else reg_4;
+process(input, counter1, flag1)
+begin
+    if flag1 = '0' then 
+        reg_1_nxt <= reg_1;
+        reg_2_nxt <= reg_2;
+        reg_3_nxt <= reg_3;
+        reg_4_nxt <= reg_4;
+    else         
+        if counter1 = "00" then
+            reg_1_nxt <= input;
+        elsif counter1 = "01" then
+            reg_2_nxt <= input;
+        elsif counter1 = "10" then
+            reg_3_nxt <= input;
+        elsif counter1 = "11" then
+            reg_4_nxt <= input;
+        end if;
+       
+    end if;
+
+end process;
+
+--reg_1_nxt <= input when counter1 = "00" and flag1 = '1' else reg_1;
+--reg_2_nxt <= input when counter1 = "01" and flag1 = '1' else reg_2;
+--reg_3_nxt <= input when counter1 = "10" and flag1 = '1' else reg_3;
+--reg_4_nxt <= input when counter1 = "11" and flag1 = '1' else reg_4;
+
+
 
 --Send the data --------------------------------------------
 data_input <=   reg_1 when counter2 = "00" and flag2 = '1' else 

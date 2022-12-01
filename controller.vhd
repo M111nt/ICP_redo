@@ -92,30 +92,56 @@ begin
         when s_ld_input => 
             flag1_nxt <= "1";
             
-            if counter14 = "1110" then
-                ld_input <= '0';
-                state_nxt <= s_initial;
+            ld_input <= '1';
+            if ld_input_done = '1' then 
+                state_nxt <= s_op;
             else 
-                ld_input <= '1';
-                if ld_input_done = '1' then 
-                    state_nxt <= s_op;
-                else 
-                    state_nxt <= s_ld_input;
-                end if;
-                
+                state_nxt <= s_ld_input;
             end if;
+            
+--            if counter14 = "1110" then
+--                ld_input <= '0';
+--                state_nxt <= s_initial;
+--            else 
+--                ld_input <= '1';
+--                if ld_input_done = '1' then 
+--                    state_nxt <= s_op;
+--                else 
+--                    state_nxt <= s_ld_input;
+--                end if;
+                
+--            end if;
             
         
         when s_op => 
             flag1_nxt <= "1";
             op_en <= '1'; 
+            
+            
             if multi_done = '1' then 
-                counter14_nxt <= counter14 + 1;
-                state_nxt <= s_ld_input;
+--                counter14_nxt <= counter14 + 1;
+                if counter14 = "1101" then 
+                    counter14_nxt <= (others => '0');
+                    state_nxt <= s_initial;
+                else
+                    counter14_nxt <= counter14 + 1;
+                    state_nxt <= s_ld_input;
+                end if;
             else
                 counter14_nxt <= counter14;
                 state_nxt <= s_op;
-            end if;
+            end if;            
+            
+            
+            
+            
+--            if multi_done = '1' then 
+--                counter14_nxt <= counter14 + 1;
+--                state_nxt <= s_ld_input;
+--            else
+--                counter14_nxt <= counter14;
+--                state_nxt <= s_op;
+--            end if;
         
     
     end case;

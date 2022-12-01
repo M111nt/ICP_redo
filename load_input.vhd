@@ -51,6 +51,7 @@ signal flag1 : std_logic;
 --enable send data
 signal flag2 : std_logic;
 
+signal hold, hold_nxt : std_logic_vector(0 downto 0) := (others => '0');
 
 --control load
 signal counter1, counter1_nxt : std_logic_vector(1 downto 0) := (others => '0');
@@ -74,14 +75,17 @@ begin
 end process;
 
 --state machine --------------------------------------------
-process(ld_input, op_en, counter1, counter2, counter3)
+process(state_reg, ld_input, op_en, counter1, counter2, counter3, hold)
 begin 
     start_load <= '0';
     ld_input_done <= '0';
     counter1_nxt <= (others => '0');
+    counter2_nxt <= (others => '0');                    
+    counter3_nxt <= (others => '0'); 
     flag1 <= '0';
     flag2 <= '0';
-
+    hold_nxt <= (others => '0'); 
+    
     case state_reg is 
     
         when s_initial => 
@@ -95,12 +99,14 @@ begin
             end if;
         
         when s_ld_input => 
+            
             flag1 <= '1'; 
             if counter1 = "11" then 
                 ld_input_done <= '1';
                 counter1_nxt <= (others => '0');
                 state_nxt <= s_initial;
             else
+                start_load <= '1';
                 ld_input_done <= '0';
                 counter1_nxt <= counter1 + 1;
                 state_nxt <= s_ld_input;
@@ -108,21 +114,63 @@ begin
                 
         when s_send2multi =>
             flag2 <= '1';
-            if counter3 = "1110" then --14
-                counter3_nxt <= (others => '0');
-                state_nxt <= s_initial;
-            else
-                counter3_nxt <= counter3 + 1;
+            if hold = "0" then 
+                hold_nxt <= hold + 1;
                 state_nxt <= s_send2multi;
-                
-                if counter2 = "11" then 
+                counter2_nxt <= counter2;
+                counter3_nxt <= counter3;
+            else 
+                hold_nxt <= (others => '0');
+                if counter3 = "1101" and counter2 = "11" then 
+                    counter2_nxt <= (others => '0');                    
+                    counter3_nxt <= (others => '0'); 
+                    state_nxt <= s_initial;              
+                elsif counter3 < "1101" and counter2 = "11" then
+                    counter3_nxt <= counter3 + 1;
                     counter2_nxt <= (others => '0');
-                else
+                    state_nxt <= s_send2multi;
+                else 
+                    counter3_nxt <= counter3;
                     counter2_nxt <= counter2 + 1;
+                    state_nxt <= s_send2multi;
                 end if;
-            
             end if;
-        
+            
+-------------------------------------------------------------            
+--            flag2 <= '1';
+--            if counter3 = "1101" and counter2 = "11" then 
+--                counter2_nxt <= (others => '0');                    
+--                counter3_nxt <= (others => '0'); 
+--                state_nxt <= s_initial;              
+--            elsif counter3 < "1101" and counter2 = "11" then
+--                counter3_nxt <= counter3 + 1;
+--                counter2_nxt <= (others => '0');
+--                state_nxt <= s_send2multi;
+--            else 
+--                counter3_nxt <= counter3;
+--                counter2_nxt <= counter2 + 1;
+--                state_nxt <= s_send2multi;
+--            end if;
+-------------------------------------------------------------             
+            
+--            if counter3 = "1110" then --14
+--                flag2 <= '0';
+--                counter3_nxt <= (others => '0');
+--                state_nxt <= s_initial;
+--            else
+--                flag2 <= '1';
+--                state_nxt <= s_send2multi;
+                
+--                if counter2 = "11" then 
+--                    counter3_nxt <= counter3 + 1;
+--                    counter2_nxt <= (others => '0');
+--                else
+--                    counter3_nxt <= counter3;
+--                    counter2_nxt <= counter2 + 1;
+--                end if;
+            
+--            end if;
+-------------------------------------------------------------        
     
     end case;
 
@@ -131,32 +179,32 @@ end process;
 
 
 --Store the data -------------------------------------------
-process(input, counter1, flag1)
-begin
-    if flag1 = '0' then 
-        reg_1_nxt <= reg_1;
-        reg_2_nxt <= reg_2;
-        reg_3_nxt <= reg_3;
-        reg_4_nxt <= reg_4;
-    else         
-        if counter1 = "00" then
-            reg_1_nxt <= input;
-        elsif counter1 = "01" then
-            reg_2_nxt <= input;
-        elsif counter1 = "10" then
-            reg_3_nxt <= input;
-        elsif counter1 = "11" then
-            reg_4_nxt <= input;
-        end if;
+--process(input, counter1, flag1)
+--begin
+--    if flag1 = '0' then 
+--        reg_1_nxt <= reg_1;
+--        reg_2_nxt <= reg_2;
+--        reg_3_nxt <= reg_3;
+--        reg_4_nxt <= reg_4;
+--    else         
+--        if counter1 = "00" then
+--            reg_1_nxt <= input;
+--        elsif counter1 = "01" then
+--            reg_2_nxt <= input;
+--        elsif counter1 = "10" then
+--            reg_3_nxt <= input;
+--        elsif counter1 = "11" then
+--            reg_4_nxt <= input;
+--        end if;
        
-    end if;
+--    end if;
 
-end process;
+--end process;
 
---reg_1_nxt <= input when counter1 = "00" and flag1 = '1' else reg_1;
---reg_2_nxt <= input when counter1 = "01" and flag1 = '1' else reg_2;
---reg_3_nxt <= input when counter1 = "10" and flag1 = '1' else reg_3;
---reg_4_nxt <= input when counter1 = "11" and flag1 = '1' else reg_4;
+reg_1_nxt <= input when counter1 = "00" and flag1 = '1' else reg_1;
+reg_2_nxt <= input when counter1 = "01" and flag1 = '1' else reg_2;
+reg_3_nxt <= input when counter1 = "10" and flag1 = '1' else reg_3;
+reg_4_nxt <= input when counter1 = "11" and flag1 = '1' else reg_4;
 
 
 
@@ -223,5 +271,14 @@ counter_03: FF
             clk     =>clk,
             reset   =>reset
       );
+
+hold_time : FF 
+  generic map(N => 1)
+  port map(   D     =>hold_nxt,
+              Q     =>hold,
+            clk     =>clk,
+            reset   =>reset
+      );
+
 
 end Behavioral;

@@ -49,6 +49,7 @@ signal RY_ram       : std_logic;
 signal sram_out     : std_logic_vector(31 downto 0);
 ---------------------------------------------------
 signal address_nxt  : std_logic_vector(7 downto 0);
+--signal address_sel  : std_logic_vector(7 downto 0);
 
 
 signal store_data_32 : std_logic_vector(31 downto 0);
@@ -69,30 +70,9 @@ port map(
     DataxDO            => sram_out 
     );
 
-
-process(reset, store_en)
-begin 
-
-if reset = '1' then 
-    choose <= '1';
-    r_or_w <= '1'; --read
-    address_nxt <= (others => '0');
-else 
-    if store_en = '1' then 
-        choose <= '0';
-        r_or_w <= '0'; --write
-        address_nxt <= address + 1;
-    else 
-        choose <= '1';
-        r_or_w <= '1'; --read
-        address_nxt <= address;
-    end if;
-
-end if;
-
-
-end process;
-
+address_nxt <= address + 1 when store_en = '1' else address;
+r_or_w <= '0' when store_en = '1' else '1';
+choose <= '0';
 
 data_address: FF 
   generic map(N => 8)

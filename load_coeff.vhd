@@ -20,7 +20,7 @@ entity load_coeff is
             --feedback to controller 
             ld2mem_done : out std_logic;
             --coeff to memory   
-            coeff2mem   : out std_logic_vector(15 downto 0);
+            --coeff2mem   : out std_logic_vector(15 downto 0);
             
             -----------------------------------------------------
             
@@ -74,9 +74,9 @@ signal RY_ram       : std_logic;
 type state_type is (s_initial, s_ld_coeff, s_op, s_send2multi);
 signal state_reg, state_nxt : state_type;
 
-signal reg, reg_nxt : std_logic_vector(15 downto 0);
+--signal reg, reg_nxt : std_logic_vector(15 downto 0);
 signal counter_1, counter_1_nxt : std_logic_vector(5 downto 0) := (others => '0');
-signal counter_2, counter_2_nxt : std_logic_vector(5 downto 0);
+--signal counter_2, counter_2_nxt : std_logic_vector(5 downto 0);
 
 signal coeff_32 : std_logic_vector(31 downto 0);
 signal data_coeff_32 : std_logic_vector(31 downto 0);
@@ -117,7 +117,8 @@ begin
     --SRAM------------------------------
     choose <= '1';
     r_or_w <= '1';--read
-    address <= (others => '0');
+    --address <= (others => '0');
+    address <= "00" & counter_1;
     ------------------------------------
 
     start_ld <= '0';
@@ -168,7 +169,7 @@ begin
             end if;
             
          when s_send2multi => 
-            choose <= '1';
+            choose <= '0';
             r_or_w <= '1'; --read
             address <= "00" & counter_1;
 
@@ -184,13 +185,13 @@ begin
 end process;
 
 --Flip Flop-------------------------------------------------
-coefficient: FF 
-  generic map(N => 16)
-  port map(   D     =>reg_nxt,
-              Q     =>reg,
-            clk     =>clk,
-            reset   =>reset
-      );
+--coefficient: FF 
+--  generic map(N => 16)
+--  port map(   D     =>reg_nxt,
+--              Q     =>reg,
+--            clk     =>clk,
+--            reset   =>reset
+--      );
 
 counter1: FF 
   generic map(N => 6)

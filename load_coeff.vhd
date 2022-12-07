@@ -16,7 +16,7 @@ entity load_coeff is
             --read data
             coeff       : in std_logic_vector(15 downto 0);     
             --control signal 
-            start_ld    : out std_logic;
+            start_ld_coeff    : out std_logic;
             --feedback to controller 
             ld2mem_done : out std_logic;
             --coeff to memory   
@@ -121,7 +121,7 @@ begin
     address <= "00" & counter_1;
     ------------------------------------
 
-    start_ld <= '0';
+    start_ld_coeff <= '0';
     ld2mem_done <= '0';
 
     counter_1_nxt <= (others => '0');
@@ -132,7 +132,7 @@ begin
         
         when s_initial => 
             if ld2mem = '1' and op_en = '0' then                 
-                start_ld <= '1';
+                start_ld_coeff <= '1';
                 state_nxt <= s_ld_coeff;
             elsif ld2mem = '0' and op_en = '1' then 
                 state_nxt <= s_op;

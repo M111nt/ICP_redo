@@ -18,7 +18,7 @@ entity load_input is
             --signal from controller 
             op_en       : in std_logic;
             
-            start_load  : out std_logic;
+            start_ld_input  : out std_logic;
             data_input  : out std_logic_vector(15 downto 0)
             
             -----------------------------------------------------
@@ -77,7 +77,7 @@ end process;
 --state machine --------------------------------------------
 process(state_reg, ld_input, op_en, counter1, counter2, counter3, hold)
 begin 
-    start_load <= '0';
+    start_ld_input <= '0';
     ld_input_done <= '0';
     counter1_nxt <= (others => '0');
     counter2_nxt <= (others => '0');                    
@@ -90,7 +90,7 @@ begin
     
         when s_initial => 
             if ld_input = '1' and op_en = '0' then 
-                start_load <= '1';--give signal to outside
+                start_ld_input <= '1';--give signal to outside
                 state_nxt <= s_ld_input;
             elsif ld_input = '0' and op_en = '1' then 
                 state_nxt <= s_send2multi;
@@ -106,7 +106,7 @@ begin
                 counter1_nxt <= (others => '0');
                 state_nxt <= s_initial;
             else
-                start_load <= '1';
+                start_ld_input <= '1';
                 ld_input_done <= '0';
                 counter1_nxt <= counter1 + 1;
                 state_nxt <= s_ld_input;

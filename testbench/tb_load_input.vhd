@@ -23,7 +23,7 @@ component load_input is
             --signal from controller 
             op_en       : in std_logic;
             
-            start_load  : out std_logic;
+            start_ld_input  : out std_logic;
             data_input  : out std_logic_vector(15 downto 0)
             
             -----------------------------------------------------
@@ -39,7 +39,7 @@ signal input       :std_logic_vector(15 downto 0);
 signal ld_input_done   :std_logic;--feedback to controller
 
 signal op_en       :std_logic;
-signal start_load  : std_logic;
+signal start_ld_input  : std_logic;
 signal data_input  : std_logic_vector(15 downto 0);
 
 constant period1    : time := 5ns;
@@ -55,7 +55,7 @@ ld_input        => ld_input     ,
 input           => input        , 
 ld_input_done   => ld_input_done  ,                  
 op_en           => op_en        , 
-start_load      => start_load    ,
+start_ld_input      => start_ld_input    ,
 data_input      => data_input    
 
 );

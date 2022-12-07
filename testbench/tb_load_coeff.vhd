@@ -16,7 +16,7 @@ component load_coeff is
             clk, reset  : in std_logic;
             ld2mem      : in std_logic;
             coeff       : in std_logic_vector(15 downto 0);     
-            start_ld    : out std_logic;
+            start_ld_coeff    : out std_logic;
             ld2mem_done : out std_logic;
             --coeff2mem   : out std_logic_vector(15 downto 0);
             op_en       : in std_logic;
@@ -29,7 +29,7 @@ signal clk         : std_logic := '1';
 signal reset       : std_logic;                     
 signal ld2mem      : std_logic;                     
 signal coeff       : std_logic_vector(15 downto 0); 
-signal start_ld    : std_logic;                    
+signal start_ld_coeff    : std_logic;                    
 signal ld2mem_done : std_logic;                    
 --signal coeff2mem   : std_logic_vector(15 downto 0);
 signal op_en       : std_logic;                     
@@ -47,7 +47,7 @@ clk             => clk          ,
 reset           => reset         ,
 ld2mem          => ld2mem       ,
 coeff           => coeff        ,
-start_ld        => start_ld     ,
+start_ld_coeff  => start_ld_coeff,
 ld2mem_done     => ld2mem_done  ,
 --coeff2mem       => coeff2mem    ,
 op_en           => op_en        ,

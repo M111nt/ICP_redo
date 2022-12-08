@@ -18,6 +18,7 @@ entity multiply is
             --ctrl out 
             multi_done  : out std_logic;
             store_en    : out std_logic;
+            max_en      : out std_logic;
             --data out
             data_out    : out std_logic_vector(17 downto 0)
             
@@ -39,7 +40,7 @@ component ff is
 end component;
 
 
-type state_type is (s_initial, s_multi, s_add, s_send);
+type state_type is (s_initial, s_multi, s_add, s_send);--, s_wait);
 signal state_reg, state_nxt : state_type;
 
 signal input_1, input_2 : std_logic_vector(7 downto 0);
@@ -52,6 +53,7 @@ signal result_1, result_2   : std_logic_vector(17 downto 0);
 --the matrix is [14*8]*[8*14], when counting 111 in binary means one number is done.
 signal counter_8, counter_8_nxt     : std_logic_vector(1 downto 0) := (others => '0');
 signal counter_14, counter_14_nxt   : std_logic_vector(3 downto 0) := (others => '0');
+signal counter_6, counter_6_nxt     : std_logic_vector(2 downto 0) := (others => '0');
 --------------------------------------------------------------------------------------
 signal data, data_nxt   : std_logic_vector(17 downto 0);
 
@@ -72,13 +74,13 @@ begin
 end process;
 
 --state machine--------------------------------------------
-process(state_reg, multi_en, counter_8, data, result_1, result_2, counter_14)
+process(state_reg, multi_en, counter_8, data, result_1, result_2, counter_14, counter_6)
 begin
     multi_done <= '0';
     data_nxt <= (others => '0');
     counter_8_nxt <= (others => '0'); 
     counter_14_nxt <= (others => '0'); 
-
+    counter_6_nxt <= (others => '0');
     store_nxt <= "0";
      input_1 <= (others => '0');
      input_2 <= (others => '0');
@@ -148,6 +150,17 @@ begin
             
             state_nxt <= s_initial;
         
+--        when s_wait => 
+--            counter_6_nxt <= counter_6 + 1;
+--            if counter_6 = "110" then 
+--                state_nxt <= s_initial;
+--            else 
+--                state_nxt <= s_wait;
+--            end if;
+            
+        
+        
+        
         
     end case;
 
@@ -161,6 +174,7 @@ result_2 <= input_2 * coeff_2 + "000000000000000000";
 
 --Send data-------------------------------------------------
 store_en <= store(0);
+max_en <= store(0);
 data_out <= data when store = "1" else (others => '0');
 
 
@@ -184,6 +198,14 @@ counter2: FF
   generic map(N => 4)
   port map(   D     =>counter_14_nxt,
               Q     =>counter_14,
+            clk     =>clk,
+            reset   =>reset
+      );
+
+counter3: FF 
+  generic map(N => 3)
+  port map(   D     =>counter_6_nxt,
+              Q     =>counter_6,
             clk     =>clk,
             reset   =>reset
       );

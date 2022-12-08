@@ -38,7 +38,7 @@ component ff is
       );
 end component;
 
-type state_type is (s_initial, s_ld_input, s_send2multi);
+type state_type is (s_initial, s_ld_input, s_send2multi, s_send2multi_w1, s_send2multi_w2);
 signal state_reg, state_nxt : state_type;
 
 signal reg_1, reg_1_nxt : std_logic_vector(15 downto 0);
@@ -54,7 +54,7 @@ signal flag2 : std_logic;
 signal hold, hold_nxt : std_logic_vector(0 downto 0) := (others => '0');
 
 --control load
-signal counter1, counter1_nxt : std_logic_vector(1 downto 0) := (others => '0');
+signal counter1, counter1_nxt : std_logic_vector(2 downto 0) := (others => '0');
 --control send
 signal counter2, counter2_nxt : std_logic_vector(1 downto 0) := (others => '0');
 --control the loop will be executed 14 times
@@ -93,7 +93,7 @@ begin
                 start_ld_input <= '1';--give signal to outside
                 state_nxt <= s_ld_input;
             elsif ld_input = '0' and op_en = '1' then 
-                state_nxt <= s_send2multi;
+                state_nxt <= s_send2multi_w1;
             else
                 state_nxt <= s_initial;
             end if;
@@ -101,10 +101,16 @@ begin
         when s_ld_input => 
             
             flag1 <= '1'; 
-            if counter1 = "11" then 
+            if counter1 = "011" then 
+                start_ld_input <= '1';
                 ld_input_done <= '1';
                 counter1_nxt <= (others => '0');
                 state_nxt <= s_initial;
+--            elsif counter1 = "011" then
+--                start_ld_input <= '0';
+--                ld_input_done <= '0';
+--                counter1_nxt <= counter1 + 1;
+--                state_nxt <= s_ld_input;
             else
                 start_ld_input <= '1';
                 ld_input_done <= '0';
@@ -112,6 +118,13 @@ begin
                 state_nxt <= s_ld_input;
             end if;
                 
+        when s_send2multi_w1 =>
+            state_nxt <= s_send2multi_w2;
+        
+        when s_send2multi_w2 =>
+            state_nxt <= s_send2multi;
+        
+        
         when s_send2multi =>
             flag2 <= '1';
             if hold = "0" then 
@@ -201,10 +214,10 @@ end process;
 
 --end process;
 
-reg_1_nxt <= input when counter1 = "00" and flag1 = '1' else reg_1;
-reg_2_nxt <= input when counter1 = "01" and flag1 = '1' else reg_2;
-reg_3_nxt <= input when counter1 = "10" and flag1 = '1' else reg_3;
-reg_4_nxt <= input when counter1 = "11" and flag1 = '1' else reg_4;
+reg_1_nxt <= input when counter1 = "000" and flag1 = '1' else reg_1;
+reg_2_nxt <= input when counter1 = "001" and flag1 = '1' else reg_2;
+reg_3_nxt <= input when counter1 = "010" and flag1 = '1' else reg_3;
+reg_4_nxt <= input when counter1 = "011" and flag1 = '1' else reg_4;
 
 
 
@@ -249,7 +262,7 @@ reg_04: FF
       );
 
 counter_01: FF 
-  generic map(N => 2)
+  generic map(N => 3)
   port map(   D     =>counter1_nxt,
               Q     =>counter1,
             clk     =>clk,

@@ -22,6 +22,7 @@ component multiply is
             --ctrl out 
             multi_done  : out std_logic;
             store_en    : out std_logic;
+            max_en      : out std_logic;
             --data out
             data_out : out std_logic_vector(17 downto 0)
           
@@ -35,6 +36,7 @@ end component;
     signal data_coeff   : std_logic_vector(15 downto 0); 
     signal multi_done   : std_logic;
     signal store_en     : std_logic;
+    signal max_en       : std_logic;
     signal data_out : std_logic_vector(17 downto 0);
 
     constant period1    : time := 5ns;
@@ -50,6 +52,7 @@ port map(
     data_coeff => data_coeff,
     multi_done => multi_done,
     store_en => store_en,
+    max_en => max_en,
     data_out   => data_out 
     
 );

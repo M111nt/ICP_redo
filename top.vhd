@@ -16,7 +16,6 @@ entity top is
         start_ld_inputo : out std_logic;
         start_ld_coeffo : out std_logic;
         max_outo        : out std_logic_vector(17 downto 0)
-
   );
 end top;
 
@@ -74,6 +73,7 @@ component multiply is
             data_coeff  : in std_logic_vector(15 downto 0); 
             multi_done  : out std_logic;
             store_en    : out std_logic;
+            max_en      : out std_logic;
             data_out    : out std_logic_vector(17 downto 0)
     );
 end component;
@@ -98,13 +98,13 @@ end component;
 
 --signal-------------------------------------------------
 --top
-signal clk              : std_logic;                    
-signal reset            : std_logic;                    
-signal start            : std_logic;                    
-signal input            : std_logic_vector(15 downto 0);
-signal start_ld_input   : std_logic;                   
-signal start_ld_coeff   : std_logic;                    
-signal max_out          : std_logic_vector(17 downto 0); 
+--signal clk              : std_logic;                    
+--signal reset            : std_logic;                    
+--signal start            : std_logic;                    
+--signal input            : std_logic_vector(15 downto 0);
+--signal start_ld_input   : std_logic;                   
+--signal start_ld_coeff   : std_logic;                    
+--signal max_out          : std_logic_vector(17 downto 0); 
 
 --controller                         
 signal ld2mem_done      : std_logic;
@@ -115,7 +115,7 @@ signal ld_input         : std_logic;
 signal op_en            : std_logic;
 
 --ld_coeff
-signal coeff               : std_logic_vector(15 downto 0);     
+--signal coeff               : std_logic_vector(15 downto 0);     
 signal multi_en            :  std_logic;
 signal data_coeff          :  std_logic_vector(15 downto 0);
 
@@ -139,7 +139,7 @@ controller_part: controller
 port map(
             clk           => clki          ,
             reset         => reseti         ,
-            start         => start        , 
+            start         => starti        , 
             ld2mem_done   => ld2mem_done  , 
             ld_input_done => ld_input_done  ,
             multi_done    => multi_done    ,               
@@ -153,8 +153,8 @@ port map(
             clk             => clki          ,
             reset           => reseti         ,
             ld2mem          => ld2mem       ,
-            coeff           => coeff        ,
-            start_ld_coeff  => start_ld_coeff,
+            coeff           => inputi        ,
+            start_ld_coeff  => start_ld_coeffo,
             ld2mem_done     => ld2mem_done  ,
             op_en           => op_en        ,
             multi_en        => multi_en     ,
@@ -166,10 +166,10 @@ port map(
             clk             => clki          ,
             reset           => reseti         ,
             ld_input        => ld_input     , 
-            input           => input        , 
+            input           => inputi        , 
             ld_input_done   => ld_input_done  ,                  
             op_en           => op_en        , 
-            start_ld_input      => start_ld_input    ,
+            start_ld_input  => start_ld_inputo    ,
             data_input      => data_input    
 );
 
@@ -182,6 +182,7 @@ port map(
             data_coeff => data_coeff,
             multi_done => multi_done,
             store_en => store_en,
+            max_en   => max_en,  
             data_out   => data_out    
 );
 
@@ -200,16 +201,8 @@ port map(
             reset    => reseti,   
             max_en   => max_en,  
             data_out => data_out,
-            max_out  => max_out 
+            max_out  => max_outo 
 );
-
-
-
-
-
-
-
-
 
 
 

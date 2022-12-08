@@ -115,7 +115,7 @@ begin
         
         when s_op => 
             flag1_nxt <= "1";
-            op_en <= '1'; 
+             
             
             
             if multi_done = '1' then 
@@ -123,11 +123,14 @@ begin
                 if counter14 = "1101" then 
                     counter14_nxt <= (others => '0');
                     state_nxt <= s_initial;
+                    op_en <= '0';
                 else
                     counter14_nxt <= counter14 + 1;
                     state_nxt <= s_ld_input;
+                    op_en <= '0';
                 end if;
             else
+                op_en <= '1';
                 counter14_nxt <= counter14;
                 state_nxt <= s_op;
             end if;            

@@ -135,6 +135,7 @@ begin
                 start_ld_coeff <= '1';
                 state_nxt <= s_ld_coeff;
             elsif ld2mem = '0' and op_en = '1' then 
+                --choose <= '0';
                 state_nxt <= s_op;
             else 
                 state_nxt <= s_initial;
@@ -149,6 +150,7 @@ begin
                 counter_1_nxt <= (others => '0');
                 state_nxt <= s_initial;
             else
+                start_ld_coeff <= '1';
                 counter_1_nxt <= counter_1 + 1;
                 state_nxt <= s_ld_coeff;
             end if;           
@@ -164,7 +166,7 @@ begin
                 multi_en <= '1';
                 state_nxt <= s_send2multi;
             else
-                multi_en <= '1';
+                multi_en <= '0';
                 state_nxt <= s_send2multi;
             end if;
             
